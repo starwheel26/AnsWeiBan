@@ -1,6 +1,6 @@
 import json, os
 
-mdContent_1 = r'''* [安全微伴题库](#安全微伴题库)
+mdContent_1 = r"""* [安全微伴题库](#安全微伴题库)
   *  [单选题](#单选题)
   *  [多选题](#多选题)
 <h1 align="center">安全微伴题库</h1>
@@ -12,14 +12,14 @@ mdContent_1 = r'''* [安全微伴题库](#安全微伴题库)
 
 | 序号 | 题目 | 答案 |
 | ---- | ---- | ---- |
-'''
-mdContent_2 = r'''
+"""
+mdContent_2 = r"""
 ### 多选题
 
 | 序号 | 题目 | 答案 |
 | ---- | ---- | ---- |
-'''
-htmlContent_Head = r'''<!doctype html>
+"""
+htmlContent_Head = r"""<!doctype html>
 <html>
 <head>
 <meta charset='UTF-8'><meta name='viewport' content='width=device-width initial-scale=1'>
@@ -611,60 +611,75 @@ header, .context-menu, .megamenu-content, footer{
 </style><title>weibanQuestionBank</title>
 </head>
 <body class='typora-export os-windows'><div class='typora-export-content'><div id='write'  class=' first-line-indent'><div class='md-toc' mdtype='toc'><p class="md-toc-content" role="list"><span role="listitem" class="md-toc-item md-toc-h1" data-ref="n2"><a class="md-toc-inner" href="#安全微伴题库">安全微伴题库</a></span><span role="listitem" class="md-toc-item md-toc-h3" data-ref="n3"><a class="md-toc-inner" href="#单选题">单选题</a></span><span role="listitem" class="md-toc-item md-toc-h3" data-ref="n769"><a class="md-toc-inner" href="#多选题">多选题</a></span></p></div><h1 align="center">安全微伴题库</h1><p align="center" class="shields"><img src="https://badges.toozhao.com/badges/01HAB9X2TMMS01Y9KR8PSE6YH1/orange.svg" alt="Visitors"/></p><h3 id='单选题'><span>单选题</span></h3><figure><table><thead><tr><th><span>序号</span></th><th><span>题目</span></th><th><span>答案</span></th></tr></thead><tbody>
-'''
-htmlContent_Middle = r'''
+"""
+htmlContent_Middle = r"""
 </tbody></table></figure><h3 id='多选题'><span>多选题</span></h3><figure><table><thead><tr><th><span>序号</span></th><th><span>题目</span></th><th><span>答案</span></th></tr></thead><tbody>
-'''
-htmlContent_Tail = r'''
+"""
+htmlContent_Tail = r"""
 </tbody></table></figure></div></div>
 </body>
 </html>
-'''
+"""
+
 
 def loadQuestionsBankData():
-    with open("Wei-ban_Questions_Bank.json", "r+", encoding='utf8') as file:return json.load(file)
+    with open("questionData.json", "r+", encoding="utf8") as file:
+        return json.load(file)
+
 
 def exportAsMd():
     global mdContent_1, mdContent_2
     data = loadQuestionsBankData()
     num = 1
     for value in data.values():
-        question = value['question']
-        answer = ' \| '.join(value['answer'])
-        if value['type'] == 1:mdContent_1 += f"| {num} | {question} | {answer} |\n"
-        elif value['type'] == 2:mdContent_2 += f"| {num} | {question} | {answer} |\n"
+        question = value["question"]
+        answer = " \| ".join(value["answer"])
+        if value["type"] == 1:
+            mdContent_1 += f"| {num} | {question} | {answer} |\n"
+        elif value["type"] == 2:
+            mdContent_2 += f"| {num} | {question} | {answer} |\n"
         num += 1
     content = mdContent_1 + mdContent_2
-    with open("weibanQuestionBank.md", "w", encoding="utf8") as file:
+    with open("questionData.md", "w", encoding="utf8") as file:
         file.write(content)
-    print('已导出为 weibanQuestionBank.md')
+    print("已导出为 questionData.md")
+
 
 def exportAsHtml():
     global htmlContent_Head, htmlContent_Middle, htmlContent_Tail
     data = loadQuestionsBankData()
     num = 1
     for value in data.values():
-        question = value['question']
-        answer = ' </span><span>|</span><span> '.join(value['answer'])
-        if value['type'] == 1:htmlContent_Head += f"<tr><td><span>{num}</span></td><td><span>{question}</span></td><td><span>{answer}</span></td></tr>"
-        elif value['type'] == 2:htmlContent_Middle += f"<tr><td><span>{num}</span></td><td><span>{question}</span></td><td><span>{answer}</span></td></tr>"
+        question = value["question"]
+        answer = " </span><span>|</span><span> ".join(value["answer"])
+        if value["type"] == 1:
+            htmlContent_Head += f"<tr><td><span>{num}</span></td><td><span>{question}</span></td><td><span>{answer}</span></td></tr>"
+        elif value["type"] == 2:
+            htmlContent_Middle += f"<tr><td><span>{num}</span></td><td><span>{question}</span></td><td><span>{answer}</span></td></tr>"
         num += 1
     content = htmlContent_Head + htmlContent_Middle + htmlContent_Tail
-    with open("weibanQuestionBank.html", "w", encoding="utf8") as file:
+    with open("questionData.html", "w", encoding="utf8") as file:
         file.write(content)
-    print('已导出为 weibanQuestionBank.html')
+    print("已导出为 questionData.html")
+
 
 def main():
     try:
-        try:option = int(input('导出数据\n1：Markdown\t2：Html\n选择导出方式：'))
-        except:option = 0
-        if option == 1:exportAsMd()
-        elif option == 2:exportAsHtml()
+        try:
+            option = int(input("导出数据\n1：Markdown\t2：Html\n选择导出方式："))
+        except:
+            option = 0
+        if option == 1:
+            exportAsMd()
+        elif option == 2:
+            exportAsHtml()
         else:
             print("未知的选项，请重新选择")
             main()
-    except FileNotFoundError:print("未找到题库数据。缺少 Wei-ban_Questions_Bank.json")
+    except FileNotFoundError:
+        print("未找到题库数据。缺少 questionData.json")
 
-if __name__ =='__main__':
+
+if __name__ == "__main__":
     main()
     os.system("pause")

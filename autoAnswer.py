@@ -1,22 +1,40 @@
-# cython: language_level=3
-import Utils, autoXue
-import json, os, time
+import Utils, study
+import json, os
 
-sleepTimeMin = 2.5
+
+DEFAULT_SCHOOL_NAME = ""
+"""这个常量的作用是暂存学校名，当同时输入的多个帐号来自同一个学校，用此避免重复地输入学校名"""
 
 
 def start(Parse, userExamPlanId, examPlanId, questionList):
     with open("questionData.json", "r", encoding="utf-8") as r:
         data = json.load(r)
+    questionIndex = 1
     for q in questionList:
         questionId = q["id"]
-        print(f'[{q["typeLabel"]}]{q["title"]}', end="")
+        print(f'({questionIndex})[{q["typeLabel"]}]{q["title"]}', end="")
+        questionIndex += 1
+        optionList = q["optionList"]
         try:
+            newOpt = False
             answer = data[questionId]
             answerIds = answer["answerIds"]
+            optAnswerIds = []
+            for opt in optionList:
+                optAnswerIds.append(opt["id"])
+            for answerId in answerIds:
+                if answerId not in optAnswerIds:
+                    newOpt = True
+            if newOpt:
+                print("")
+                for option in optionList:
+                    print(f"{optionList.index(option)}.{option['content']}")
+                answerIndexs = str(input("选项未收录，请手动选择答案:"))
+                answerIndexs = answerIndexs.split(",")
+                for i in answerIndexs:
+                    answerIds.append(optionList[int(i)]["id"])
         except:
             print("")
-            optionList = q["optionList"]
             answerIds = []
             for option in optionList:
                 print(f"{optionList.index(option)}.{option['content']}")
@@ -25,11 +43,17 @@ def start(Parse, userExamPlanId, examPlanId, questionList):
             for i in answerIndexs:
                 answerIds.append(optionList[int(i)]["id"])
         answerIds = str(answerIds).replace("'", "").replace(" ", "")[1:-1:1]
-        Parse.recordQuestion(userExamPlanId, questionId, answerIds, examPlanId)
-        print(": ok", end="\n\n")
+        code = 1
+        while code != 0:
+            respose = Parse.recordQuestion(
+                userExamPlanId, questionId, answerIds, examPlanId
+            )
+            code = int(respose["code"])
+            if code == 0:
+                print(" ok", end="\n\n")
+            else:
+                print(f"答题失败 {respose}")
     input("答题结束，提交试卷请按Enter")
-    # print(f"答题结束，{sleepTimeMin}分钟后提交试卷")
-    # time.sleep(sleepTimeMin * 60)
     print("提交试卷中...")
     result = Parse.submitPaper(userExamPlanId)
     if int(result["code"]) == -1:
@@ -39,13 +63,13 @@ def start(Parse, userExamPlanId, examPlanId, questionList):
 
 
 def main():
+    global DEFAULT_SCHOOL_NAME
     print("输入学校名、帐号、密码，结束输入请按 Ctrl + C")
-    schoolNameDEFAULT_SCHOOL_NAME = "西安石油大学"
-    schoolName = input(f"请输入学校名称(当前默认学校为 {schoolNameDEFAULT_SCHOOL_NAME} ):")
+    schoolName = input(f"请输入学校名称(当前默认学校为 {DEFAULT_SCHOOL_NAME} ):")
     id = input("请输入学号:")
     password = input("请输入密码:")
     if schoolName == "":
-        schoolName = schoolNameDEFAULT_SCHOOL_NAME
+        schoolName = DEFAULT_SCHOOL_NAME
     account = {"id": id, "password": password, "schoolName": schoolName}
     login_State = Utils.get_Login_State(account)
     while True:
@@ -74,8 +98,9 @@ def main():
             print(f"获取考试失败: {preparePaper['msg']}")
             if preparePaper["msg"] == "课程学习未完成":
                 s = input("是否自动刷课(y/n):")
+                s = "y"
                 if s in ["y", "Y"]:
-                    autoXue.study(
+                    study.study(
                         login_State["tenantCode"],
                         login_State["userId"],
                         login_State["token"],
@@ -91,6 +116,7 @@ def main():
         )
         s = input("是否开始考试(y/n):")
         if s in ["y", "Y"]:
+            print("若出现未收录，请于答题结束后运行importData或者importOneReviewPaper，以便及时更新题库。")
             questionList = AnsParse.startPaper(userExamPlanId)["questionList"]
             start(AnsParse, userExamPlanId, examPlanId, questionList)
         else:
